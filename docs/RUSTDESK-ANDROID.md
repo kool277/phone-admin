@@ -1,15 +1,35 @@
 # RustDesk on Android: remote control through your own server
 
-This sets up the RustDesk Android app so you can control the phone from Ubuntu over the internet. All traffic goes through **your** self-hosted server from the `rustdesk-core` project, not RustDesk's public servers. Every permission is granted by hand on the phone. Checked against **RustDesk 1.5.1**.
+This sets up the RustDesk Android app so you can control the phone over the internet, from Ubuntu or from an iPhone. All traffic goes through **your** self-hosted server, **`rat.jami.uz`** (from the `rustdesk-core` project), not RustDesk's public servers. Every permission is granted by hand on the phone. Checked against **RustDesk 1.5.1**.
 
-## What you need from rustdesk-core
+## Your server: rat.jami.uz
 
-| Value | Where it comes from | Example |
-|---|---|---|
-| Server host | Your domain or public IP running `hbbs` + `hbbr` | `rd.example.com` |
-| Public key | Contents of `id_ed25519.pub` in the hbbs data directory | `AbC…xyz=` (44 chars) |
+| Value | What to enter |
+|---|---|
+| ID Server | `rat.jami.uz` |
+| Relay Server | `rat.jami.uz` |
+| API Server | leave empty (only used by RustDesk Server Pro) |
+| Key | the server's public key: one line of 44 characters, ending in `=` |
 
-The server must accept **TCP 21115–21117 and UDP 21116**. Ports 21118 and 21119 are only needed for the web client.
+Read the key on the server, where hbbs keeps it in its data directory:
+
+```bash
+cat <hbbs-data-dir>/id_ed25519.pub        # e.g. ./data/id_ed25519.pub next to docker-compose.yml
+docker exec hbbs cat /root/id_ed25519.pub # same file, if hbbs runs in Docker with ./data mounted at /root
+```
+
+The key is public by design: clients use it to check that they're talking to *your* server. Never copy `id_ed25519` (without `.pub`), which is the private half. Enter the **same** three values on every device: the Android phone, the Ubuntu PC and the iPhone.
+
+The server must accept **TCP 21115–21117 and UDP 21116**. Ports 21118 and 21119 are only needed for the web client. If the server sits behind a home router, forward those ports to it.
+
+### Dynamic IP: always use the hostname
+
+The server's public IP can change, and DDNS keeps `rat.jami.uz` pointing at the current one. That only helps if nothing stores the IP itself:
+
+- Enter `rat.jami.uz` in the ID Server and Relay Server fields on every device. Never enter the IP.
+- If hbbs is started with a relay option (`hbbs -r …`), give it the hostname too. hbbs passes that value to clients as the relay address.
+- Keep the DDNS record's TTL short (a few minutes). After an IP change, clients reconnect once the new address resolves; they need no reconfiguration.
+- Check the name from outside: `dig +short rat.jami.uz` should print the server's current public IP.
 
 ## 1. Install the app
 
@@ -25,10 +45,10 @@ You can also install it from [GitHub releases](https://github.com/rustdesk/rustd
 
 1. Open RustDesk → **Settings** tab → **ID/Relay Server**.
 2. Fill in:
-   - **ID Server:** `rd.example.com`
-   - **Relay Server:** `rd.example.com` (if left empty, it uses the ID server host on port 21117)
+   - **ID Server:** `rat.jami.uz`
+   - **Relay Server:** `rat.jami.uz` (if left empty, it uses the ID server host on port 21117)
    - **API Server:** leave empty (only used by RustDesk Server Pro)
-   - **Key:** paste the public key
+   - **Key:** paste the public key (see [Your server](#your-server-ratjamiuz))
 3. Save. The **Share screen** tab should now show the device's **ID** and a ready status. If it says "not ready", check the host, the firewall and the key.
 
 ## 3. Grant screen capture and input (on the phone)
@@ -85,12 +105,26 @@ sudo apt install "./rustdesk-$v-x86_64.deb"
 2. Enter the phone's ID, choose **Connect**, and type the permanent password.
 3. Controls: left-click = tap, right-click = back. Home and recents are in the toolbar at the top of the session window.
 
+## 6. Connect from an iPhone
+
+The RustDesk iOS app can control the Android phone through `rat.jami.uz` too. Set the same ID Server, Relay Server and Key in the app, then connect to the phone's ID. Step-by-step instructions are in ios-viewer's [RUSTDESK-IOS.md](https://github.com/kool277/ios-viewer/blob/main/docs/RUSTDESK-IOS.md). The reverse doesn't work: an iPhone can't share its own screen through RustDesk.
+
+## Encryption
+
+RustDesk's built-in end-to-end encryption protects each session. This setup adds no crypto of its own.
+
+- **Server identity:** every device has a key pair. hbbs signs each device's public key with the server key, and the connecting side checks that signature against the **Key** you entered. This is why the Key must be the same everywhere.
+- **Session key:** the connecting side creates a fresh symmetric key for every connection and seals it to the peer's verified public key. The rest of the session is encrypted with it. The relay (hbbr) only forwards ciphertext.
+- **Without the Key** (or with a wrong one), RustDesk can't verify the peer and runs the session on a non-secured path. The session window then shows it as not secured. Fix the Key before you rely on the connection.
+- **Passwords:** the permanent password is the remaining line of defense, so make it long and unique. Turning on RustDesk's 2FA in the Android app's Settings adds a second factor for incoming sessions.
+
 ## Troubleshooting
 
 | Symptom | Likely cause |
 |---|---|
 | "Key mismatch" / "Failed to secure connection" | Key differs between the phone, the PC and `id_ed25519.pub`; re-paste it everywhere |
-| Stuck on "Connecting…" / "Not ready" | 21116/UDP+TCP or 21117/TCP blocked; wrong host |
+| Stuck on "Connecting…" / "Not ready" | 21116/UDP+TCP or 21117/TCP blocked; wrong host; `dig +short rat.jami.uz` empty or stale (DDNS not updated) |
+| Worked yesterday, "Not ready" today | Server IP changed: check DDNS, and that no device has the IP typed in instead of `rat.jami.uz` |
 | Connected but black screen | Screen capture not started on the phone (see the hard limit above) |
 | You can see but not control | **RustDesk Input** accessibility was switched off. OEM battery killers and some updates do this; re-enable it or run `make rustdesk-perms` |
 | Works on Wi-Fi, fails on mobile data | Carrier NAT blocks hole punching; it should fall back to the relay (21117), so check that hbbr is running |

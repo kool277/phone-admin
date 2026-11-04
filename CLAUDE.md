@@ -31,6 +31,7 @@ To test the installer without root or touching the system:
 
 The docs were last checked against scrcpy 5.0.1 and RustDesk 1.5.1. Re-check version-specific claims when bumping.
 
+- RustDesk server host: `rat.jami.uz` (DDNS, dynamic IP). Docs always use the hostname, never an IP, and never contain the key's value: they show how to read `id_ed25519.pub` instead.
 - RustDesk Android package: `com.carriez.flutter_hbb`; accessibility service: `com.carriez.flutter_hbb/com.carriez.flutter_hbb.InputService`.
 - RustDesk APK asset names: `rustdesk-<ver>-{aarch64,armv7,x86_64,universal}-signed.apk`.
 - scrcpy Linux asset: `scrcpy-linux-x86_64-<tag>.tar.gz` (contains `scrcpy`, `scrcpy-server`, `adb`), checked against `SHA256SUMS.txt`.

@@ -3,7 +3,7 @@
 Control **your own** Android devices from an Ubuntu desktop. You get full screen, keyboard and mouse control in two ways:
 
 - **On the local network:** [scrcpy](https://github.com/Genymobile/scrcpy) over USB or Wi-Fi. It needs no app on the phone and has low latency.
-- **Over the internet:** the [RustDesk](https://github.com/rustdesk/rustdesk) Android app, pointed at your own self-hosted RustDesk server.
+- **Over the internet:** the [RustDesk](https://github.com/rustdesk/rustdesk) Android app, pointed at your own self-hosted RustDesk server `rat.jami.uz`. You can control the phone from the Ubuntu desktop client or from the RustDesk iPhone app.
 
 Everything is consent-based. Developer options, USB debugging, the RSA prompt, screen capture and the accessibility toggle are all enabled by hand on the phone.
 
@@ -70,5 +70,5 @@ docs/REDROID.md             virtual Android without KVM: binder setup, settings,
 
 - **Audio:** scrcpy forwards audio itself on Android 11+, so sndcpy isn't needed.
 - **Don't expose adb to the internet.** Use RustDesk (or a VPN) for remote access. adb over TCP gives a full shell to anyone who can reach the port.
-- **RustDesk server values** (host and public key) come from your `rustdesk-core` server. The docs use `rd.example.com` as a placeholder.
-- **iPhone?** The iOS counterpart is [ios-viewer](https://github.com/kool277/ios-viewer). It's view and manage only (AirPlay mirroring plus libimobiledevice over USB), because iOS doesn't let a computer send touches or keys.
+- **RustDesk server:** `rat.jami.uz` (from `rustdesk-core`; DDNS handles its dynamic IP). Enter it as both ID and Relay server, along with the server's public key, on every device. See [docs/RUSTDESK-ANDROID.md](docs/RUSTDESK-ANDROID.md#your-server-ratjamiuz).
+- **iPhone?** The RustDesk iOS app can *control* this Android phone through `rat.jami.uz` ([guide](https://github.com/kool277/ios-viewer/blob/main/docs/RUSTDESK-IOS.md)). For the iPhone itself, [ios-viewer](https://github.com/kool277/ios-viewer) is view and manage only (AirPlay mirroring plus libimobiledevice over USB), because iOS doesn't let a computer send touches or keys.
