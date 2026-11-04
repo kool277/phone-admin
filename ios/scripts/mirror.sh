@@ -2,14 +2,14 @@
 # Start the AirPlay receiver (uxplay) so the iPhone can mirror its screen to this desktop.
 # VIEW ONLY: AirPlay sends video/audio to the receiver and nothing back; you cannot tap or type on the phone.
 #
-#   scripts/mirror.sh                 # receiver named "ios-viewer", fixed ports (uxplay -p)
+#   scripts/mirror.sh                 # receiver named "phone-admin", fixed ports (uxplay -p)
 #   scripts/mirror.sh -fs             # extra arguments go straight to uxplay (see `uxplay -h`)
 #   NAME="My Desk" scripts/mirror.sh  # name shown in the iPhone's Screen Mirroring list
 #
 # Then on the iPhone: Control Center → Screen Mirroring → pick the name. Same Wi-Fi/LAN as this PC.
 set -euo pipefail
 
-NAME=${NAME:-ios-viewer}
+NAME=${NAME:-phone-admin}
 
 die() { echo "error: $*" >&2; exit 1; }
 

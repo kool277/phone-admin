@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Bash scripts, a Makefile and docs for viewing and managing the owner's own iPhone from Ubuntu: uxplay (AirPlay receiver) for live mirroring, libimobiledevice over USB for management, and docs for using the RustDesk iOS app (server `rat.jami.uz`) to control the Android phone from `../androidMonitor`. **View + manage only.** iOS offers no input injection from a computer, so never add anything that tries to control the phone or works around Apple's restrictions. The same goes for the "Trust This Computer" pairing, Developer Mode and app signing: document these steps and leave them manual. The Android sibling project is `../androidMonitor`. Its style (cmd_ functions, `## ` help comments, `make help`) is mirrored here.
+Bash scripts, a Makefile and docs for viewing and managing the owner's own iPhone from Ubuntu: uxplay (AirPlay receiver) for live mirroring, libimobiledevice over USB for management, and docs for using the RustDesk iOS app (server `rat.jami.uz`) to control the Android phone set up in `../android`. **View + manage only.** iOS offers no input injection from a computer, so never add anything that tries to control the phone or works around Apple's restrictions. The same goes for the "Trust This Computer" pairing, Developer Mode and app signing: document these steps and leave them manual. This is the `ios/` half of the phone-admin repo; the Android half is `../android`, and the root `Makefile` forwards `ios-<target>` here. Its style (cmd_ functions, `## ` help comments, `make help`) is mirrored here.
 
 ## Commands
 
@@ -20,6 +20,8 @@ scripts/install.sh --dry-run                # print the apt/systemctl/ufw/pipx c
 - `manage-cheatsheet.sh` dispatches `cmd_<name>`. The `## name ARGS — description` comment above each one is the help text. Device-touching commands call `need_paired`, which requires exactly one USB iPhone (or the `UDID` env var) and a valid pairing. `UDID` becomes `-u` for libimobiledevice/ifuse and `PYMOBILEDEVICE3_UDID` for pymobiledevice3. Don't add per-command device plumbing.
 - `ifuse` takes the mount point **first**, then options (`ifuse DIR -u UDID --documents ID`).
 - Help text for `install.sh`, `mirror.sh` and the cheatsheet is printed from the leading `#` comment block, so keep those headers user-facing.
+- `photos` mounts the media area on a temp dir with an EXIT trap that unmounts it, then `rsync -rt --ignore-existing`. Keep it non-destructive: never `--delete`, never overwrite.
+- `backup` calls `backup_space_check` for first and `FULL=1` backups (phone's used storage vs `df` of DIR; `FORCE=1` overrides).
 - `mirror.sh` always runs `uxplay -p` (fixed ports TCP 7000/7001/7100, UDP 6000/6001/7011). The docs and `install.sh --ufw` rely on those ports.
 
 ## Facts the docs rely on

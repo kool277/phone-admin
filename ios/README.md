@@ -1,4 +1,6 @@
-# ios-viewer
+# phone-admin / ios
+
+The iPhone half of [phone-admin](../README.md). Run the `make` commands below from this folder, or from the repo root as `make ios-<target>`.
 
 View and manage **your own** iPhone from an Ubuntu desktop.
 
@@ -17,7 +19,7 @@ make install       # uxplay + libimobiledevice-utils + ideviceinstaller + ifuse 
 make doctor        # what's installed, running and connected
 
 # View: same Wi-Fi as the PC
-make mirror        # then iPhone: Control Center → Screen Mirroring → "ios-viewer"
+make mirror        # then iPhone: Control Center → Screen Mirroring → "phone-admin"
 
 # Manage: USB cable, phone unlocked
 make pair          # tap "Trust" and enter the passcode on the iPhone
@@ -36,8 +38,9 @@ make screenshot    # needs Developer Mode; on iOS 17+ also `make install-pmd3` (
 | `mirror`, `mirror-fs` | Start the AirPlay receiver (`NAME=…`, `OPTS="…"` for uxplay flags) |
 | `devices`, `pair`, `unpair` | List iPhones; pair or unpair this PC |
 | `info`, `apps`, `install-ipa IPA=…` | Device info; installed apps; install a signed `.ipa` |
-| `backup`, `backup-full`, `backup-info` | Backups into `DIR` (default `./backups`) |
+| `backup`, `backup-full`, `backup-info` | Backups into `DIR` (default `./backups`). A first or full backup checks free disk space first |
 | `screenshot`, `dev-mode`, `mount-ddi` | Screenshot to `FILE`, plus the Developer Mode / disk image steps it needs |
+| `photos` | Copy new photos/videos to `DEST` (default `./photos`). Re-runs copy only what's new and never delete anything |
 | `mount`, `umount` | Mount or unmount the camera roll at `DIR` (default `./iphone-media`) |
 | `syslog` | Live device log (`MATCH=…`) |
 | `lint` | shellcheck the scripts |
@@ -63,4 +66,4 @@ docs/MANAGE.md                pairing, commands, backups, files, screenshots by 
 docs/RUSTDESK-IOS.md          RustDesk iOS app on rat.jami.uz: control the Android phone over the internet
 ```
 
-The Android counterpart, which *can* be controlled remotely because Android allows it, is [android-admin](https://github.com/kool277/android-admin). Both projects use the same RustDesk server, `rat.jami.uz`, and the same Key.
+The Android half, which *can* be controlled remotely because Android allows it, is in [android/](../android/README.md). Both halves use the same RustDesk server, `rat.jami.uz`, and the same Key.

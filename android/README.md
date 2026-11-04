@@ -1,4 +1,6 @@
-# android-admin
+# phone-admin / android
+
+The Android half of [phone-admin](../README.md). Run the `make` commands below from this folder, or from the repo root as `make android-<target>`.
 
 Control **your own** Android devices from an Ubuntu desktop. You get full screen, keyboard and mouse control in two ways:
 
@@ -43,6 +45,8 @@ make rustdesk-android   # install the right APK for the phone's CPU
 | `pair`, `connect`, `wireless`, `disconnect` | Wi-Fi adb helpers (`scripts/wireless.sh`) |
 | `install-apk APK=…` | Install or update an APK and keep its data |
 | `devices`, `info` | List devices; model, Android version, battery, storage |
+| `doctor` | Checks adb/scrcpy, a conflicting Ubuntu `adb` package, udev rules, and each device's state (unauthorized/offline) |
+| `photos [DEST=…]` | Copy new photos/videos (DCIM, Pictures, Movies) to `./photos`, keeping capture times. Re-runs copy only what's new; nothing is deleted |
 | `rustdesk-android`, `rustdesk-perms` | Install RustDesk; optional battery and input permissions via adb |
 | `vm-up`, `vm-mirror`, `vm-down`, `vm-status` | Virtual Android in Docker (redroid) mirrored with scrcpy; no phone or KVM needed |
 
@@ -71,4 +75,4 @@ docs/REDROID.md             virtual Android without KVM: binder setup, settings,
 - **Audio:** scrcpy forwards audio itself on Android 11+, so sndcpy isn't needed.
 - **Don't expose adb to the internet.** Use RustDesk (or a VPN) for remote access. adb over TCP gives a full shell to anyone who can reach the port.
 - **RustDesk server:** `rat.jami.uz` (from `rustdesk-core`; DDNS handles its dynamic IP). Enter it as both ID and Relay server, along with the server's public key, on every device. See [docs/RUSTDESK-ANDROID.md](docs/RUSTDESK-ANDROID.md#your-server-ratjamiuz).
-- **iPhone?** The RustDesk iOS app can *control* this Android phone through `rat.jami.uz` ([guide](https://github.com/kool277/ios-viewer/blob/main/docs/RUSTDESK-IOS.md)). For the iPhone itself, [ios-viewer](https://github.com/kool277/ios-viewer) is view and manage only (AirPlay mirroring plus libimobiledevice over USB), because iOS doesn't let a computer send touches or keys.
+- **iPhone?** The RustDesk iOS app can *control* this Android phone through `rat.jami.uz` ([guide](../ios/docs/RUSTDESK-IOS.md)). The iPhone itself is view and manage only, because iOS doesn't let a computer send touches or keys. See [ios/](../ios/README.md).

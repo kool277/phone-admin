@@ -17,7 +17,7 @@ Checked against uxplay 1.68.2 (Ubuntu 24.04's package). Run `uxplay -h` for the 
 
 ```bash
 make install-mirror       # uxplay, GStreamer decoders, avahi-daemon
-make mirror               # starts uxplay as "ios-viewer"; Ctrl+C stops it
+make mirror               # starts uxplay as "phone-admin"; Ctrl+C stops it
 make mirror NAME="Office PC" OPTS="-fs"
 ```
 
@@ -27,7 +27,7 @@ make mirror NAME="Office PC" OPTS="-fs"
 
 1. Open **Control Center**. On iPhones with Face ID, swipe down from the top-right corner. On iPhones with a Home button, swipe up from the bottom edge.
 2. Tap **Screen Mirroring** (two overlapping rectangles).
-3. Pick **ios-viewer** (or your `NAME`). If you started uxplay with `-pin`, type the code shown on the PC.
+3. Pick **phone-admin** (or your `NAME`). If you started uxplay with `-pin`, type the code shown on the PC.
 4. To stop: Control Center → Screen Mirroring → **Stop Mirroring**, or Ctrl+C in the terminal.
 
 If the screen is rotated, the picture follows. `-r R|L` rotates the window and `-f H|V|I` flips it.
@@ -60,7 +60,7 @@ Pass them as `make mirror OPTS="…"` or `scripts/mirror.sh …`.
 
 | Symptom | Check |
 |---|---|
-| "ios-viewer" doesn't appear on the iPhone | `systemctl status avahi-daemon`; same subnet (no guest Wi-Fi); firewall ports above; `avahi-browse -rt _airplay._tcp` (package `avahi-utils`) should list it |
+| "phone-admin" doesn't appear on the iPhone | `systemctl status avahi-daemon`; same subnet (no guest Wi-Fi); firewall ports above; `avahi-browse -rt _airplay._tcp` (package `avahi-utils`) should list it |
 | Appears, but connecting fails or hangs | Firewall: the TCP/UDP ports above; restart uxplay; `-d` for a debug log |
 | Black or green window, or a GStreamer error | `OPTS="-avdec"`; make sure `gstreamer1.0-libav` and `gstreamer1.0-plugins-bad` are installed |
 | Laggy | 5 GHz Wi-Fi or Ethernet for the PC; `-fps 30`; lower `-s` |

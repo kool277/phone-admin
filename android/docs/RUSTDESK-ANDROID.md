@@ -107,7 +107,7 @@ sudo apt install "./rustdesk-$v-x86_64.deb"
 
 ## 6. Connect from an iPhone
 
-The RustDesk iOS app can control the Android phone through `rat.jami.uz` too. Set the same ID Server, Relay Server and Key in the app, then connect to the phone's ID. Step-by-step instructions are in ios-viewer's [RUSTDESK-IOS.md](https://github.com/kool277/ios-viewer/blob/main/docs/RUSTDESK-IOS.md). The reverse doesn't work: an iPhone can't share its own screen through RustDesk.
+The RustDesk iOS app can control the Android phone through `rat.jami.uz` too. Set the same ID Server, Relay Server and Key in the app, then connect to the phone's ID. Step-by-step instructions are in [ios/docs/RUSTDESK-IOS.md](../../ios/docs/RUSTDESK-IOS.md). The reverse doesn't work: an iPhone can't share its own screen through RustDesk.
 
 ## Encryption
 

@@ -1,4 +1,4 @@
-# android-admin — run `make help`.
+# phone-admin / android — run `make help` (or `make android-help` from the repo root).
 #
 # Target one device among several:  make mirror SERIAL=192.168.1.42:5555
 # Extra scrcpy flags:               make mirror OPTS="--max-size=1600 --turn-screen-off"
@@ -13,7 +13,7 @@ endif
 
 .PHONY: help install install-apt devices info mirror mirror-usb mirror-wifi mirror-tcpip \
         desktop record pair connect wireless disconnect install-apk rustdesk-android \
-        rustdesk-perms vm-up vm-mirror vm-down vm-status lint
+        rustdesk-perms vm-up vm-mirror vm-down vm-status photos doctor lint
 
 help: ## show this help
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-17s %s\n", $$1, $$2}'
@@ -23,6 +23,9 @@ install: ## install scrcpy + adb (official release, bundles current adb)
 
 install-apt: ## install Ubuntu-packaged scrcpy/adb instead (older)
 	scripts/install.sh --apt
+
+doctor: ## check adb/scrcpy, the adb package conflict, devices and authorization
+	scripts/adb-cheatsheet.sh doctor
 
 devices: ## list attached devices
 	adb devices -l
@@ -81,6 +84,9 @@ vm-down: ## stop redroid (apps and data are kept)
 
 vm-status: ## redroid container + adb state
 	scripts/redroid.sh status
+
+photos: ## copy new photos/videos to DEST (default ./photos); never deletes
+	scripts/adb-cheatsheet.sh photos $(or $(DEST),photos)
 
 lint: ## shellcheck the scripts (falls back to the koalaman/shellcheck Docker image)
 	@if command -v shellcheck >/dev/null; then shellcheck scripts/*.sh; \

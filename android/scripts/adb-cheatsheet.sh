@@ -143,6 +143,60 @@ cmd_rustdesk-perms() {
   fi
 }
 
+## photos [DEST] [DIR...]  — copy NEW photos/videos to DEST (default ./photos); never deletes or overwrites
+cmd_photos() {
+  local dest=${1:-photos}; shift || true
+  local dirs=("$@") list=() f rel target copied=0 had=0
+  (( ${#dirs[@]} )) || dirs=(/sdcard/DCIM /sdcard/Pictures /sdcard/Movies)
+  # Skip hidden entries: .thumbnails/, and Android 11+ trash and in-progress files
+  # (.trashed-<time>-IMG_….jpg, .pending-…), which would otherwise come back as "new" photos.
+  mapfile -t list < <(sh_ "find ${dirs[*]} -type f ! -path '*/.*' 2>/dev/null" || true)
+  (( ${#list[@]} )) || die "no files under: ${dirs[*]}"
+  mkdir -p "$dest"
+  for f in "${list[@]}"; do
+    rel=${f#/sdcard/}; rel=${rel#/storage/emulated/0/}
+    target="$dest/$rel"
+    if [[ -e $target ]]; then had=$((had + 1)); continue; fi
+    mkdir -p "$(dirname "$target")"
+    # -a keeps the capture time as the file's mtime, so photo apps sort correctly.
+    # Pull to .part first: an interrupted run never leaves a truncated file that looks complete.
+    # </dev/null: adb must not eat the loop's stdin.
+    adb pull -a "$f" "$target.part" </dev/null >/dev/null && mv "$target.part" "$target"
+    echo "$rel"; copied=$((copied + 1))
+  done
+  echo "copied $copied new, $had already in $dest"
+}
+
+## doctor                  — check adb/scrcpy, the Ubuntu adb package conflict, devices and authorization
+cmd_doctor() {
+  local ok=1 serial state
+  if command -v adb >/dev/null; then echo "ok    $(adb version | head -1) ($(command -v adb))"
+  else echo "MISS  adb   (scripts/install.sh)"; ok=0; fi
+  if command -v scrcpy >/dev/null; then echo "ok    $(scrcpy --version 2>/dev/null | head -1)"
+  else echo "MISS  scrcpy   (scripts/install.sh)"; ok=0; fi
+  # Two adb versions fight over the server port and keep killing each other's server.
+  if dpkg -s adb >/dev/null 2>&1 && [[ $(command -v adb) != /usr/bin/adb ]]; then
+    echo "warn  Ubuntu's 'adb' package is installed too; remove it: sudo apt remove adb"
+  fi
+  [[ -e /etc/udev/rules.d/51-android.rules || -e /usr/lib/udev/rules.d/51-android.rules ]] \
+    && echo "ok    udev rules for USB access" || echo "--    no 51-android udev rules (only matters if USB devices show as 'no permissions')"
+  command -v adb >/dev/null || { (( ok )); return; }
+  local n=0
+  while read -r serial state; do
+    [[ -n $serial ]] || continue
+    n=$((n + 1))
+    case $state in
+      device)       echo "ok    $serial: $(adb -s "$serial" shell getprop ro.product.model </dev/null | tr -d '\r'), Android $(adb -s "$serial" shell getprop ro.build.version.release </dev/null | tr -d '\r')" ;;
+      unauthorized) echo "MISS  $serial: unauthorized: unlock the phone and accept the USB debugging (RSA) prompt"; ok=0 ;;
+      offline)      echo "MISS  $serial: offline: replug the cable, or 'adb kill-server' and retry"; ok=0 ;;
+      *)            echo "MISS  $serial: $state"; ok=0 ;;
+    esac
+  done < <(adb devices | tail -n +2)
+  (( n )) || echo "--    no devices: USB debugging on and cable in, or 'make pair'/'make connect' for Wi-Fi"
+  (( n > 1 )) && echo "note  several devices: pick one with SERIAL=… (make) or ANDROID_SERIAL=… (scripts)"
+  (( ok ))
+}
+
 cmd_help() {
   sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
   echo "Commands:"
@@ -152,7 +206,7 @@ cmd_help() {
 name=${1:-help}
 shift || true
 declare -F "cmd_$name" >/dev/null || die "unknown command '$name' (try: $0 help)"
-if [[ $name != help ]]; then
+if [[ $name != help && $name != doctor ]]; then
   command -v adb >/dev/null || die "adb not found — run scripts/install.sh"
   [[ $name == devices ]] || adb get-state >/dev/null 2>&1 \
     || die "no single authorized device (see 'adb devices'; several? set ANDROID_SERIAL)"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install the ios-viewer toolchain on Ubuntu (24.04 tested) from Ubuntu's own packages.
+# Install the phone-admin iOS toolchain on Ubuntu (24.04 tested) from Ubuntu's own packages.
 #
 #   scripts/install.sh                   # mirroring + management
 #   scripts/install.sh --no-mirror       # management only (libimobiledevice, ifuse)
@@ -9,7 +9,7 @@
 #   scripts/install.sh --dry-run         # print the commands instead of running them
 #
 # Mirroring:  uxplay + GStreamer decoders + avahi-daemon (the iPhone finds uxplay over Bonjour/mDNS).
-# Management: usbmuxd + libimobiledevice-utils + ideviceinstaller + ifuse.
+# Management: usbmuxd + libimobiledevice-utils + ideviceinstaller + ifuse (+ rsync for photo import).
 # Nothing here pairs with or changes the iPhone: "Trust This Computer" is tapped by hand (docs/MANAGE.md).
 set -euo pipefail
 
@@ -34,7 +34,7 @@ command -v apt-get >/dev/null || { echo "error: needs apt (Ubuntu/Debian)" >&2; 
 pkgs=()
 (( mirror )) && pkgs+=(uxplay avahi-daemon gstreamer1.0-plugins-base gstreamer1.0-plugins-good
                        gstreamer1.0-plugins-bad gstreamer1.0-libav)
-(( manage )) && pkgs+=(usbmuxd libimobiledevice-utils ideviceinstaller ifuse)
+(( manage )) && pkgs+=(usbmuxd libimobiledevice-utils ideviceinstaller ifuse rsync)
 (( pmd3 ))   && pkgs+=(pipx)
 
 if (( ${#pkgs[@]} )); then
@@ -71,7 +71,7 @@ cat <<'EOF'
 Done. Next:
   make doctor     # check tools, usbmuxd, Avahi, the connected iPhone
   make pair       # USB cable + unlocked iPhone → tap "Trust" and enter the passcode on the phone
-  make mirror     # then iPhone: Control Center → Screen Mirroring → ios-viewer
+  make mirror     # then iPhone: Control Center → Screen Mirroring → phone-admin
 EOF
 (( pmd3 )) && echo "  (open a new terminal so pipx's ~/.local/bin is on PATH)"
 exit 0

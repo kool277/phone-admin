@@ -43,6 +43,7 @@ What to know:
 | `backup-encryption on\|off` | `idevicebackup2 -i encryption` | Encrypt backups (password prompt; not on the command line) |
 | `restore [DIR]` | `idevicebackup2 restore` | Put a backup back on the phone (asks first) |
 | `make screenshot` | pymobiledevice3 / `idevicescreenshot` | See [Screenshots](#screenshots) |
+| `make photos [DEST=…]` | `ifuse` + `rsync` | Copy new photos/videos to `./photos`; re-runs copy only what's new, nothing is deleted |
 | `make mount [DIR=…]` | `ifuse` | Mount the camera roll/media area (`DCIM/`, …) |
 | `shared-apps` | `ifuse --list-apps` | Apps whose Documents folder can be mounted |
 | `mount-docs BUNDLEID [DIR]` | `ifuse --documents` | Mount one app's Documents folder |
@@ -55,6 +56,7 @@ What to know:
 ## Backups
 
 - Backups use the same format as Finder/iTunes and land in `DIR/<UDID>/`. The size is roughly the phone's used storage, minus what lives only in iCloud.
+- **Free space check:** a first backup (or `make backup-full`) needs room for all of that, and running out halfway wastes a long wait. `make backup` compares the phone's used storage with the free space in `DIR` first and refuses if it won't fit. The phone's usage is an upper bound, so `FORCE=1` tries anyway. Later backups are incremental and skip the check. External disk: `make backup DIR=/media/$USER/<disk>/iphone`.
 - **Encryption:** encrypted backups also keep saved passwords, Wi-Fi, Health and call history. On iOS 13 and later, turning encryption on or off asks for the passcode on the phone. When encryption is on, starting a backup may ask for it as well. The password is stored on the iPhone, and if you lose it, the backups can't be read. Removing it without the password means resetting all settings on the phone.
 - **Restore** replaces the phone's data and reboots it. iOS refuses while **Find My iPhone** is on.
 
@@ -67,6 +69,7 @@ iOS only installs apps that are **signed for it**: App Store/TestFlight builds, 
 - `make mount` exposes the **media area**: `DCIM/` (photos and videos as HEIC/HEVC or JPEG/H.264, depending on Settings → Camera → Formats), plus a few others. With iCloud Photos set to "Optimize iPhone Storage", many originals aren't on the phone at all.
 - `mount-docs` works only for apps that turned on **File Sharing**. `scripts/manage-cheatsheet.sh shared-apps` lists them. `ifuse --container` (the whole app sandbox) works only for development-signed apps. `--root` needs a jailbreak and isn't used here.
 - Unmount before you unplug: `make umount`.
+- **Importing photos:** `make photos DEST=~/Pictures/iphone` mounts the camera roll, copies files that aren't in `DEST` yet (keeping the folder layout and capture times), and always unmounts afterwards, even on Ctrl+C. It never deletes anything on the phone or the PC, so you can run it whenever you like. To view HEIC/HEVC on Ubuntu: `sudo apt install heif-gdk-pixbuf heif-thumbnailer`.
 
 ## Screenshots
 

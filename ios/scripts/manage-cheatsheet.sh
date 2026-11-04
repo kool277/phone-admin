@@ -115,9 +115,27 @@ cmd_backup() {
   local dir=${1:-backups}
   need_paired
   mkdir -p "$dir"
+  backup_space_check "$dir"
   # Creates DIR/<UDID>/. Same format as Finder/iTunes. If backup encryption is on, the phone may ask
   # for its passcode before starting.
   if [[ ${FULL:-0} == 1 ]]; then idevicebackup2 "${U[@]}" backup --full "$dir"; else idevicebackup2 "${U[@]}" backup "$dir"; fi
+}
+
+# A first (or FULL=1) backup that runs out of disk dies halfway, after a long wait. Check up front.
+# The phone's used storage is an upper bound for the backup size (iCloud-only data isn't included),
+# so FORCE=1 lets you try anyway.
+backup_space_check() {
+  local dir=$1 udid total avail used free
+  udid=$(info -k UniqueDeviceID)
+  [[ -e $dir/$udid/Manifest.db && ${FULL:-0} != 1 ]] && return 0   # incremental: only changes are copied
+  total=$(info -q com.apple.disk_usage -k TotalDataCapacity || true)
+  avail=$(info -q com.apple.disk_usage -k TotalDataAvailable || true)
+  [[ $total =~ ^[0-9]+$ && $avail =~ ^[0-9]+$ ]] || return 0
+  used=$((total - avail))
+  free=$(df -B1 --output=avail "$dir" | tail -1 | tr -d ' ')
+  if (( free < used )) && [[ ${FORCE:-0} != 1 ]]; then
+    die "full backup may need up to $((used / 1000000000)) GB (phone's used storage); $dir has $((free / 1000000000)) GB free. Free space, use another DIR, or FORCE=1 to try anyway"
+  fi
 }
 
 ## backup-info [DIR]       — details of the last backup in DIR
@@ -194,6 +212,31 @@ cmd_mount-docs() {
   need_paired
   mkdir -p "$dir"
   ifuse "$dir" "${U[@]}" --documents "$id" && echo "mounted at $dir  (unmount: $0 umount $dir)"
+}
+
+## photos [DEST]           — copy NEW photos/videos from the camera roll to DEST (default ./photos); never deletes
+PHOTOS_MNT=
+photos_cleanup() {
+  [[ -n $PHOTOS_MNT ]] || return 0
+  fusermount -u "$PHOTOS_MNT" 2>/dev/null || true
+  rmdir "$PHOTOS_MNT" 2>/dev/null || true
+}
+
+cmd_photos() {
+  local dest=${1:-photos} mnt
+  need_paired
+  have rsync || die "rsync not installed: sudo apt install rsync"
+  mnt=$(mktemp -d); PHOTOS_MNT=$mnt
+  # Always unmount, even on Ctrl+C or an error; a stale FUSE mount blocks the next run.
+  # (The trap runs after this function returns, so it uses the global, not the local.)
+  trap photos_cleanup EXIT
+  ifuse "$mnt" "${U[@]}"
+  [[ -d $mnt/DCIM ]] || die "no DCIM folder on the phone (camera roll empty, or the phone is locked)"
+  mkdir -p "$dest"
+  # -rt: keep folder layout (100APPLE/, 101APPLE/, …) and capture times. --ignore-existing: a re-run
+  # copies only new files and never touches ones already imported. Hidden files are iOS bookkeeping.
+  rsync -rt --ignore-existing --exclude='.*' --info=progress2 "$mnt/DCIM/" "$dest/"
+  echo "done: $dest  (HEIC/HEVC viewers for Ubuntu: sudo apt install heif-gdk-pixbuf heif-thumbnailer)"
 }
 
 ## umount DIR              — unmount something mounted by mount / mount-docs

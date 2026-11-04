@@ -1,6 +1,6 @@
 # RustDesk on the iPhone: control your Android phone over the internet
 
-The RustDesk iOS app turns the iPhone into a **remote control** for your other devices: the Android phone set up with [android-admin](https://github.com/kool277/android-admin), the Ubuntu PC, and anything else running RustDesk. All traffic goes through **your** server, **`rat.jami.uz`**, not RustDesk's public servers. Checked against **RustDesk 1.5.1**.
+The RustDesk iOS app turns the iPhone into a **remote control** for your other devices: the Android phone set up with [android/](../../android/README.md), the Ubuntu PC, and anything else running RustDesk. All traffic goes through **your** server, **`rat.jami.uz`**, not RustDesk's public servers. Checked against **RustDesk 1.5.1**.
 
 > **The iPhone can't share its own screen through RustDesk.** The iOS app only works in one direction: it connects *out* and controls other devices. In RustDesk 1.5.1 the screen-sharing page is built only for Android, and the iOS app has none of the pieces iOS would require for screen sharing. This project doesn't work around that. To *see* the iPhone's screen, use AirPlay mirroring to Ubuntu ([MIRROR.md](MIRROR.md)), which works only on the same network.
 
@@ -8,12 +8,12 @@ The RustDesk iOS app turns the iPhone into a **remote control** for your other d
 |---|---|---|
 | iPhone (RustDesk app) | Android phone | **Yes:** view + control, over the internet |
 | iPhone (RustDesk app) | Ubuntu PC / other computers | **Yes:** view + control |
-| Ubuntu PC (RustDesk) | Android phone | **Yes:** see android-admin's [RUSTDESK-ANDROID.md](https://github.com/kool277/android-admin/blob/main/docs/RUSTDESK-ANDROID.md) |
+| Ubuntu PC (RustDesk) | Android phone | **Yes:** see [android/docs/RUSTDESK-ANDROID.md](../../android/docs/RUSTDESK-ANDROID.md) |
 | Anything | iPhone | **No.** View it on the LAN with uxplay; manage it over USB ([MANAGE.md](MANAGE.md)) |
 
 ## 1. Prepare the Android side first
 
-The Android phone has to be reachable before the iPhone can connect to it. Follow android-admin's [RUSTDESK-ANDROID.md](https://github.com/kool277/android-admin/blob/main/docs/RUSTDESK-ANDROID.md): server settings, screen capture, the Input Control permission and a permanent password. Write down the phone's **ID**, shown on the app's *Share screen* tab.
+The Android phone has to be reachable before the iPhone can connect to it. Follow [android/docs/RUSTDESK-ANDROID.md](../../android/docs/RUSTDESK-ANDROID.md): server settings, screen capture, the Input Control permission and a permanent password. Write down the phone's **ID**, shown on the app's *Share screen* tab.
 
 ## 2. Install the app on the iPhone
 

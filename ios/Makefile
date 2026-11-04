@@ -1,4 +1,4 @@
-# ios-viewer — run `make help`.
+# phone-admin / ios — run `make help` (or `make ios-help` from the repo root).
 #
 # View (AirPlay mirroring) + manage (libimobiledevice over USB) your own iPhone. No remote control:
 # iOS gives an outside computer no way to inject touches or keys.
@@ -8,7 +8,7 @@
 
 SHELL := /bin/bash
 OPTS  ?=
-NAME  ?= ios-viewer
+NAME  ?= phone-admin
 M     := scripts/manage-cheatsheet.sh
 
 ifdef UDID
@@ -18,7 +18,7 @@ export NAME
 
 .PHONY: help install install-mirror install-manage install-pmd3 doctor mirror mirror-fs devices pair \
         unpair info apps install-ipa backup backup-full backup-info screenshot dev-mode mount-ddi \
-        mount umount syslog lint
+        mount umount photos syslog lint
 
 help: ## show this help
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-15s %s\n", $$1, $$2}'
@@ -63,7 +63,7 @@ install-ipa: ## install IPA=path/to/app.ipa (must be signed for this device)
 	@test -n "$(IPA)" || { echo "usage: make install-ipa IPA=path/to/app.ipa"; exit 2; }
 	$(M) install "$(IPA)"
 
-backup: ## incremental backup into DIR (default ./backups)
+backup: ## incremental backup into DIR (default ./backups); checks free space first (FORCE=1 skips)
 	$(M) backup $(or $(DIR),backups)
 
 backup-full: ## full backup into DIR (default ./backups)
@@ -87,8 +87,13 @@ mount: ## mount the camera roll/media area at DIR (default ./iphone-media)
 umount: ## unmount DIR (default ./iphone-media)
 	$(M) umount $(or $(DIR),iphone-media)
 
+photos: ## copy new photos/videos to DEST (default ./photos); never deletes
+	$(M) photos $(or $(DEST),photos)
+
 syslog: ## live device log (MATCH=text to filter)
 	$(M) syslog $(MATCH)
 
-lint: ## shellcheck the scripts
-	shellcheck scripts/*.sh
+lint: ## shellcheck the scripts (falls back to the koalaman/shellcheck Docker image)
+	@if command -v shellcheck >/dev/null; then shellcheck scripts/*.sh; \
+	else echo "shellcheck not installed, using Docker"; \
+	docker run --rm -v "$(CURDIR):/mnt:ro" -w /mnt koalaman/shellcheck:stable scripts/*.sh; fi
