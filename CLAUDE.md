@@ -1,0 +1,35 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this is
+
+Bash scripts, a Makefile and docs for administering the owner's own Android devices from Ubuntu. scrcpy covers USB and LAN access. The RustDesk Android client, pointed at a self-hosted server (from the separate `rustdesk-core` project), covers internet access. Every phone-side permission is granted by hand on the device, so keep it that way: scripts may automate the PC side and optional adb shortcuts, but must not bypass on-device consent prompts.
+
+## Commands
+
+```bash
+make help          # all targets (generated from the "## " comments in Makefile)
+make lint          # shellcheck scripts/*.sh — keep it clean
+scripts/adb-cheatsheet.sh help
+scripts/wireless.sh help
+```
+
+To test the installer without root or touching the system:
+`PREFIX=/tmp/x/opt BINDIR=/tmp/x/bin scripts/install.sh --no-deps`
+
+## How the pieces fit
+
+- `install.sh` installs the **official static scrcpy release** into `/opt/scrcpy`. The `/usr/local/bin/scrcpy` it creates is a *wrapper script*, not a symlink, so that scrcpy finds `scrcpy-server` next to it. The bundled `adb` is symlinked as `/usr/local/bin/adb`, so the shell and scrcpy share one adb server version. Ubuntu's `adb` package conflicts with this; the script warns about it.
+- Device selection goes through the `ANDROID_SERIAL` env var, which adb and scrcpy both honor. The Makefile exports it from `SERIAL=`. Don't add `-s` plumbing to scripts.
+- `adb-cheatsheet.sh` dispatches `cmd_<name>` functions. The `## name ARGS — description` comment above each function is what `help` prints, so add new commands in that form. Every command except `help` and `devices` requires exactly one connected device.
+- Help text for `install.sh` and `wireless.sh` is printed by `sed -n 'A,Bp' "$0"` from their header comments. If you edit a header, update the line range too.
+- The scripts use `set -euo pipefail`. Don't pipe `curl` into `grep -m1`/`head`: the early pipe close kills curl (exit 23). Capture the response into a variable first.
+
+## Facts the docs rely on
+
+The docs were last checked against scrcpy 5.0.1 and RustDesk 1.5.1. Re-check version-specific claims when bumping.
+
+- RustDesk Android package: `com.carriez.flutter_hbb`; accessibility service: `com.carriez.flutter_hbb/com.carriez.flutter_hbb.InputService`.
+- RustDesk APK asset names: `rustdesk-<ver>-{aarch64,armv7,x86_64,universal}-signed.apk`.
+- scrcpy Linux asset: `scrcpy-linux-x86_64-<tag>.tar.gz` (contains `scrcpy`, `scrcpy-server`, `adb`), checked against `SHA256SUMS.txt`.
