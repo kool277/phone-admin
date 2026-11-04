@@ -71,3 +71,4 @@ docs/REDROID.md             virtual Android without KVM: binder setup, settings,
 - **Audio:** scrcpy forwards audio itself on Android 11+, so sndcpy isn't needed.
 - **Don't expose adb to the internet.** Use RustDesk (or a VPN) for remote access. adb over TCP gives a full shell to anyone who can reach the port.
 - **RustDesk server values** (host and public key) come from your `rustdesk-core` server. The docs use `rd.example.com` as a placeholder.
+- **iPhone?** The iOS counterpart is [ios-viewer](https://github.com/kool277/ios-viewer). It's view and manage only (AirPlay mirroring plus libimobiledevice over USB), because iOS doesn't let a computer send touches or keys.
