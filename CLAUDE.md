@@ -23,6 +23,7 @@ To test the installer without root or touching the system:
 - `install.sh` installs the **official static scrcpy release** into `/opt/scrcpy`. The `/usr/local/bin/scrcpy` it creates is a *wrapper script*, not a symlink, so that scrcpy finds `scrcpy-server` next to it. The bundled `adb` is symlinked as `/usr/local/bin/adb`, so the shell and scrcpy share one adb server version. Ubuntu's `adb` package conflicts with this; the script warns about it.
 - Device selection goes through the `ANDROID_SERIAL` env var, which adb and scrcpy both honor. The Makefile exports it from `SERIAL=`. Don't add `-s` plumbing to scripts.
 - `adb-cheatsheet.sh` dispatches `cmd_<name>` functions. The `## name ARGS — description` comment above each function is what `help` prints, so add new commands in that form. Every command except `help` and `devices` requires exactly one connected device.
+- `redroid.sh` runs Android in Docker for testing without a phone (the dev host has no KVM, so the Android Emulator isn't an option). adb reaches it at `127.0.0.1:5600`. Keep that port outside 5555–5585, which adb probes for emulators.
 - Help text for `install.sh` and `wireless.sh` is printed by `sed -n 'A,Bp' "$0"` from their header comments. If you edit a header, update the line range too.
 - The scripts use `set -euo pipefail`. Don't pipe `curl` into `grep -m1`/`head`: the early pipe close kills curl (exit 23). Capture the response into a variable first.
 

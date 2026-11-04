@@ -13,7 +13,7 @@ endif
 
 .PHONY: help install install-apt devices info mirror mirror-usb mirror-wifi mirror-tcpip \
         desktop record pair connect wireless disconnect install-apk rustdesk-android \
-        rustdesk-perms lint
+        rustdesk-perms vm-up vm-mirror vm-down vm-status lint
 
 help: ## show this help
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-17s %s\n", $$1, $$2}'
@@ -69,6 +69,18 @@ rustdesk-android: ## download + install latest RustDesk APK matching the phone's
 
 rustdesk-perms: ## optional: battery exemption + input (accessibility) via adb
 	scripts/adb-cheatsheet.sh rustdesk-perms
+
+vm-up: ## start Android-in-Docker (redroid) and connect adb, see docs/REDROID.md
+	scripts/redroid.sh up
+
+vm-mirror: ## mirror + control the redroid Android with scrcpy
+	scripts/redroid.sh mirror $(OPTS)
+
+vm-down: ## stop redroid (apps and data are kept)
+	scripts/redroid.sh down
+
+vm-status: ## redroid container + adb state
+	scripts/redroid.sh status
 
 lint: ## shellcheck the scripts
 	shellcheck scripts/*.sh

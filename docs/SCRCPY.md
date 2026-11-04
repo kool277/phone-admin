@@ -124,5 +124,6 @@ For the full list, run `man -l /opt/scrcpy/scrcpy.1` or `scrcpy --help`.
 | `adb server version (...) doesn't match this client` | `sudo apt remove adb`, then use `/usr/local/bin/adb` |
 | Mirror works but input doesn't | Xiaomi: *USB debugging (Security settings)*. ColorOS: *Disable permission monitoring* |
 | Some apps show black | Normal: banking/DRM apps block capture (`FLAG_SECURE`) |
+| `ERROR: Could not create VA-API device` | No usable GPU decoder (e.g. Ubuntu in a VM). Harmless: scrcpy falls back to software decoding. Add `--hwdec=disabled` to silence it |
 | Laggy over Wi-Fi | `-m 1024 -b 2M --max-fps=30`, use 5 GHz Wi-Fi, or USB |
 | Need to list devices | `make devices` |

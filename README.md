@@ -44,6 +44,7 @@ make rustdesk-android   # install the right APK for the phone's CPU
 | `install-apk APK=…` | Install or update an APK and keep its data |
 | `devices`, `info` | List devices; model, Android version, battery, storage |
 | `rustdesk-android`, `rustdesk-perms` | Install RustDesk; optional battery and input permissions via adb |
+| `vm-up`, `vm-mirror`, `vm-down`, `vm-status` | Virtual Android in Docker (redroid) mirrored with scrcpy; no phone or KVM needed |
 
 Common variables: `SERIAL=<serial|ip:port>` picks a device; `OPTS="…"` passes extra scrcpy flags. `make help` lists all targets.
 
@@ -59,8 +60,10 @@ scripts/adb-cheatsheet.sh help
 scripts/install.sh          scrcpy (official static build, bundles adb) + udev rules
 scripts/wireless.sh         adb pair / connect / tcpip / mDNS discover
 scripts/adb-cheatsheet.sh   commented adb management commands, runnable by name
+scripts/redroid.sh          Android-in-Docker (redroid) up / mirror / down / wipe
 docs/SCRCPY.md              phone prep, USB + Wi-Fi, options, shortcuts, per-version notes
 docs/RUSTDESK-ANDROID.md    client config (ID/Relay/Key), permissions, unattended access
+docs/REDROID.md             virtual Android without KVM: binder setup, settings, limits
 ```
 
 ## Notes
