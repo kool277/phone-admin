@@ -80,7 +80,7 @@ curl -fsSL -o "$tmp/SHA256SUMS.txt" "$base/SHA256SUMS.txt"
 tar -xzf "$tmp/$tarball" -C "$tmp"
 as_root_for "$PREFIX" rm -rf "$PREFIX"
 as_root_for "$PREFIX" mkdir -p "$PREFIX"
-as_root_for "$PREFIX" cp -a "$tmp/${tarball%.tar.gz}/." "$PREFIX/"
+as_root_for "$PREFIX" cp -R --no-preserve=ownership "$tmp/${tarball%.tar.gz}/." "$PREFIX/"
 
 # Wrapper (not a symlink) so scrcpy always finds scrcpy-server and its bundled adb.
 as_root_for "$BINDIR" mkdir -p "$BINDIR"
