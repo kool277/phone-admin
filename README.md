@@ -6,6 +6,7 @@ View and manage **your own** iPhone from an Ubuntu desktop.
 
 - **View:** [uxplay](https://github.com/FDH2/UxPlay), an AirPlay receiver. You start Screen Mirroring from the iPhone's Control Center, and the picture shows up live on the PC. Wi-Fi/LAN only. → [docs/MIRROR.md](docs/MIRROR.md)
 - **Manage:** [libimobiledevice](https://libimobiledevice.org) over USB: device info, app list/install, backups, screenshots, mounting the camera roll and app Documents folders. → [docs/MANAGE.md](docs/MANAGE.md)
+- **Control your Android phone from the iPhone:** the RustDesk iOS app, connected through your server `rat.jami.uz`, works over the internet. It goes one way only: the iPhone controls other devices, but it can't share its own screen through RustDesk. → [docs/RUSTDESK-IOS.md](docs/RUSTDESK-IOS.md)
 
 The iPhone has to **trust this computer** (the "Trust This Computer?" prompt plus the passcode, tapped by you on the phone) before any management command works. That step can't be skipped.
 
@@ -49,6 +50,7 @@ Several iPhones attached: add `UDID=<udid>` (from `make devices`). `make help` l
 - **iOS 17 and later:** Ubuntu 24.04's libimobiledevice 1.3.0 can't reach developer services (screenshots), so use pymobiledevice3. iOS 17.0–17.3 also need `sudo pymobiledevice3 remote tunneld`.
 - **iOS 11.4.1 and later:** USB Restricted Mode blocks USB data after an hour locked. Unlock the phone first.
 - **Mirroring:** DRM-protected video shows black. After iOS updates, an older uxplay may need upgrading.
+- **RustDesk (1.5.1):** the iOS app can only connect out to other devices. Seeing the iPhone remotely over the internet isn't possible with it.
 
 ## Layout
 
@@ -58,6 +60,7 @@ scripts/mirror.sh             preflight checks, then uxplay -n NAME -nh -p
 scripts/manage-cheatsheet.sh  one small function per management task; `help` lists them
 docs/MIRROR.md                uxplay setup, iPhone Screen Mirroring steps, troubleshooting
 docs/MANAGE.md                pairing, commands, backups, files, screenshots by iOS version
+docs/RUSTDESK-IOS.md          RustDesk iOS app on rat.jami.uz: control the Android phone over the internet
 ```
 
-The Android counterpart, which *can* control the phone because Android allows it, is `../androidMonitor` ([android-admin](https://github.com/kool277/android-admin)).
+The Android counterpart, which *can* be controlled remotely because Android allows it, is [android-admin](https://github.com/kool277/android-admin). Both projects use the same RustDesk server, `rat.jami.uz`, and the same Key.
