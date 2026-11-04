@@ -10,7 +10,7 @@ Bash scripts, a Makefile and docs for administering the owner's own Android devi
 
 ```bash
 make help          # all targets (generated from the "## " comments in Makefile)
-make lint          # shellcheck scripts/*.sh — keep it clean
+make lint          # shellcheck scripts/*.sh (Docker image if shellcheck is missing) — keep it clean
 scripts/adb-cheatsheet.sh help
 scripts/wireless.sh help
 ```

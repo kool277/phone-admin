@@ -82,5 +82,7 @@ vm-down: ## stop redroid (apps and data are kept)
 vm-status: ## redroid container + adb state
 	scripts/redroid.sh status
 
-lint: ## shellcheck the scripts
-	shellcheck scripts/*.sh
+lint: ## shellcheck the scripts (falls back to the koalaman/shellcheck Docker image)
+	@if command -v shellcheck >/dev/null; then shellcheck scripts/*.sh; \
+	else echo "shellcheck not installed, using Docker"; \
+	docker run --rm -v "$(CURDIR):/mnt:ro" -w /mnt koalaman/shellcheck:stable scripts/*.sh; fi
