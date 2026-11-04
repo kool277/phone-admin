@@ -1,0 +1,7 @@
+backups/
+iphone-media/
+*-docs/
+crashlogs/
+screenshot-*.png
+screenshot-*.tiff
+*.ipa
