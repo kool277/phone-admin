@@ -17,9 +17,11 @@ set -euo pipefail
 die() { echo "error: $*" >&2; exit 1; }
 
 # Wi-Fi IPv4 of the single USB-attached device, from its routing table.
+# Captured first: awk exits early, which would SIGPIPE the adb pipeline under pipefail.
 usb_device_ip() {
-  adb -d shell ip route 2>/dev/null | tr -d '\r' \
-    | awk '/ dev wlan/ { for (i = 1; i < NF; i++) if ($i == "src") { print $(i + 1); exit } }'
+  local routes
+  routes=$(adb -d shell ip route 2>/dev/null | tr -d '\r') || true
+  awk '/ dev wlan/ { for (i = 1; i < NF; i++) if ($i == "src") { print $(i + 1); exit } }' <<<"$routes"
 }
 
 cmd=${1:-help}
@@ -33,7 +35,12 @@ case "$cmd" in
     addr=${1:?usage: wireless.sh pair IP:PORT [CODE]}
     code=${2:-}
     [[ -n $code ]] || read -rp "6-digit pairing code: " code
-    adb pair "$addr" "$code"
+    [[ $code =~ ^[0-9]{6}$ ]] || die "the pairing code is 6 digits"
+    # adb pair exits 0 even when pairing fails ("Failed: Wrong password…"), so check what it says.
+    out=$(adb pair "$addr" "$code" 2>&1) || true
+    echo "$out"
+    [[ $out == *"Successfully paired"* ]] \
+      || die "pairing failed: check the code and IP:PORT on the phone's 'Pair device with pairing code' dialog (both change every time it opens)"
     echo
     echo "Paired. Now connect using the IP:PORT on the main Wireless debugging screen:"
     echo "  $0 connect ${addr%:*}:<port>"
@@ -55,12 +62,16 @@ case "$cmd" in
     echo "==> phone Wi-Fi IP: $ip — restarting adbd on TCP port $port"
     adb -d tcpip "$port"
     # adbd restarts; give it a moment before connecting.
+    ok=0
     for _ in 1 2 3 4 5; do
       sleep 1
       out=$(adb connect "$ip:$port" 2>&1) || true
-      [[ $out == *"connected to"* ]] && break
+      if [[ $out == *"connected to"* ]]; then ok=1; break; fi
     done
     adb devices -l
+    (( ok )) || die "could not connect to $ip:$port over Wi-Fi ($out). KEEP THE CABLE IN: USB adb still works.
+  Check that the PC and phone are on the same network (no guest/client-isolated Wi-Fi) and that no
+  firewall blocks port $port, then retry: $0 connect $ip:$port"
     echo "You can unplug USB now. Mirror with: scrcpy -s $ip:$port"
     ;;
 

@@ -26,5 +26,6 @@ make ios-<t>           # = make -C ios <t>; UDID= etc. pass through
 ## Cross-cutting facts
 
 - RustDesk server: `rat.jami.uz` (DDNS, dynamic IP). Docs use the hostname, never an IP, and never the key's value; they show how to read `id_ed25519.pub`. Both halves' RustDesk docs link each other with relative paths.
-- Each half's Makefile runs its scripts as `scripts/...` relative to its own folder; the root forwards with `make -C`. Don't call sub-scripts from the root with root-relative paths, except the guarded ones in `devices`.
+- The root forwards with `make -C android|ios <t> CALLER=<root dir>`. Don't call sub-scripts from the root with root-relative paths, except the guarded ones in `devices`.
+- Both halves' Makefiles share one parameter convention: values come only from the make command line (`$(call arg,X)`, never a variable inherited from the shell), are shell-quoted with `$(call q,…)`/`$(call qarg,X)`, and targets that take or produce paths run as `$(RUN) <abs script>`, i.e. from `CALLER`, so relative paths and defaults resolve where the user ran make. Keep new targets in that form.
 - Photo import on both sides must stay non-destructive: copy only new files, never delete or overwrite.

@@ -61,8 +61,13 @@ if (( ufw )); then
 fi
 
 if (( pmd3 )); then
-  # User-level install (no sudo). Re-run `pipx upgrade pymobiledevice3` after big iOS updates.
-  run pipx install pymobiledevice3 || run pipx upgrade pymobiledevice3
+  # User-level install (no sudo). Re-running this upgrades it, which new iOS versions often need.
+  # (`pipx install` of an installed package exits 0 without upgrading, so pick the command.)
+  if [[ $(pipx list --short 2>/dev/null || true) == *pymobiledevice3* ]]; then
+    run pipx upgrade pymobiledevice3
+  else
+    run pipx install pymobiledevice3
+  fi
   run pipx ensurepath
 fi
 

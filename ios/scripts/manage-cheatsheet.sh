@@ -83,8 +83,9 @@ cmd_info() {
   if [[ $total =~ ^[0-9]+$ && $free =~ ^[0-9]+$ ]]; then
     printf 'storage:   %s GB free of %s GB\n' "$((free / 1000000000))" "$((total / 1000000000))"
   fi
-  # Key exists from iOS 16 on; empty on older versions.
-  printf 'dev mode:  %s\n' "$(info -q com.apple.security.mac.amfi -k DeveloperModeStatus || echo n/a)"
+  # Key exists from iOS 16 on; ideviceinfo prints nothing (and exits 0) on older versions.
+  local dm; dm=$(info -q com.apple.security.mac.amfi -k DeveloperModeStatus || true)
+  printf 'dev mode:  %s\n' "${dm:-n/a}"
 }
 
 ## info-all [DOMAIN]       — every lockdown value (ideviceinfo), optionally one domain
@@ -94,7 +95,8 @@ cmd_info-all() { need_paired; if [[ -n ${1:-} ]]; then ideviceinfo "${U[@]}" -q 
 cmd_apps() {
   need_paired
   # -o list_system / list_all for the others. Output is CSV: CFBundleIdentifier, CFBundleVersion, CFBundleDisplayName
-  ideviceinstaller "${U[@]}" -l -o list_user | grep -i -- "${1:-.}" || true
+  local list; list=$(ideviceinstaller "${U[@]}" -l -o list_user) || die "ideviceinstaller could not list apps"
+  grep -i -- "${1:-.}" <<<"$list" || true
 }
 
 ## install IPA             — install/upgrade an .ipa signed for this device (no sideloading bypass)
@@ -260,21 +262,39 @@ cmd_shutdown() { need_paired; confirm "Power off the iPhone?"; idevicediagnostic
 
 ## doctor                  — check tools, services, the attached iPhone and what its iOS version allows
 cmd_doctor() {
-  local t ok=1
-  for t in uxplay idevice_id ideviceinfo idevicepair ideviceinstaller idevicebackup2 ifuse; do
-    if have "$t"; then echo "ok    $t"; else echo "MISS  $t   (scripts/install.sh)"; ok=0; fi
+  local t ok=1 manage=0 missing=()
+  # Mirroring and management can be installed separately (make install-mirror / install-manage),
+  # so a half that isn't installed at all is reported, not counted as a failure.
+  if have uxplay; then
+    echo "ok    uxplay"
+    if systemctl is-active --quiet avahi-daemon; then echo "ok    avahi-daemon running (mirroring discovery)"
+    else echo "MISS  avahi-daemon not running: sudo systemctl enable --now avahi-daemon"; ok=0; fi
+  else
+    echo "--    uxplay not installed: no mirroring (make install-mirror)"
+  fi
+  for t in idevice_id ideviceinfo idevicepair ideviceinstaller idevicebackup2 ifuse; do
+    if have "$t"; then echo "ok    $t"; manage=1; else missing+=("$t"); fi
   done
+  if (( ! manage )); then
+    echo "--    libimobiledevice not installed: no management (make install-manage)"
+    have uxplay || { echo "MISS  nothing installed: make install"; return 1; }
+    (( ok )); return
+  fi
+  for t in "${missing[@]}"; do echo "MISS  $t   (make install-manage)"; ok=0; done
   if have pymobiledevice3; then echo "ok    pymobiledevice3 $(pymobiledevice3 version 2>/dev/null || true)"
   else echo "--    pymobiledevice3 (optional; needed for screenshots on iOS 17+)"; fi
-  if systemctl is-active --quiet avahi-daemon; then echo "ok    avahi-daemon running (mirroring discovery)"
-  else echo "MISS  avahi-daemon not running: sudo systemctl enable --now avahi-daemon"; ok=0; fi
   # usbmuxd is started by udev when an Apple device is plugged in, so "inactive" without a phone is normal.
   echo "info  usbmuxd: $(systemctl is-active usbmuxd 2>/dev/null || true)"
 
   local ids; ids=$(idevice_id -l 2>/dev/null || true)
   if [[ -z $ids ]]; then echo "--    no iPhone on USB"; (( ok )); return; fi
   echo "ok    iPhone(s) on USB: $(tr '\n' ' ' <<<"$ids")"
-  if [[ -z ${UDID:-} ]] && (( $(wc -l <<<"$ids") > 1 )); then echo "--    several attached; set UDID=… for the rest"; return; fi
+  if [[ -n ${UDID:-} ]] && ! grep -qx -- "$UDID" <<<"$ids"; then
+    echo "MISS  UDID=$UDID is not attached"; return 1
+  fi
+  if [[ -z ${UDID:-} ]] && (( $(wc -l <<<"$ids") > 1 )); then
+    echo "--    several attached; set UDID=… to check one"; (( ok )); return
+  fi
   if ! idevicepair "${U[@]}" validate >/dev/null 2>&1; then echo "MISS  not paired: $0 pair"; return 1; fi
   echo "ok    paired"
   local v major dm

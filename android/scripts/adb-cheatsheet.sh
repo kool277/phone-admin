@@ -13,6 +13,8 @@ RUSTDESK_PKG=com.carriez.flutter_hbb
 
 die() { echo "error: $*" >&2; exit 1; }
 sh_() { adb shell "$@" | tr -d '\r'; }
+# Quote one word for the phone's shell: `adb shell` joins its arguments into a single command line.
+sq() { printf "'%s'" "${1//\'/\'\\\'\'}"; }
 
 ## devices                 — attached devices with model/transport
 cmd_devices() { adb devices -l; }
@@ -57,9 +59,11 @@ cmd_enable()  { sh_ pm enable "${1:?usage: enable PKG}"; }
 
 ## apk PKG                 — pull an installed app's APK(s) into ./PKG/
 cmd_apk() {
-  local pkg=${1:?usage: apk PKG}
+  local pkg=${1:?usage: apk PKG} paths p
+  paths=$(sh_ pm path "$pkg" || true)
+  [[ -n $paths ]] || die "$pkg is not installed (see: $0 packages)"
   mkdir -p "$pkg"
-  sh_ pm path "$pkg" | sed 's/^package://' | while read -r p; do adb pull "$p" "$pkg/"; done
+  while read -r p; do adb pull "${p#package:}" "$pkg/" </dev/null; done <<<"$paths"
 }
 
 ## push SRC [DEST]         — copy to phone (default /sdcard/Download/)
@@ -94,8 +98,24 @@ cmd_bugreport() { adb bugreport "${1:-.}"; }
 ## wake                    — turn the screen on
 cmd_wake() { sh_ input keyevent KEYCODE_WAKEUP; }
 
-## type TEXT               — type text into the focused field (ASCII only)
-cmd_type() { sh_ input text "$(printf '%s' "${1:?usage: type TEXT}" | sed 's/ /%s/g')"; }
+## type TEXT               — type text into the focused field (printable ASCII only)
+cmd_type() {
+  local text=${1:?usage: type TEXT} c piece='' i cmds=() LC_ALL=C
+  [[ $text =~ ^[\ -~]+$ ]] || die "type: printable ASCII only (input text can't type other characters)"
+  # `input text` turns %s into a space and has no escape for it, so: spaces are sent as the SPACE
+  # key, every piece ends right after a '%', and each piece is quoted for the phone's shell.
+  flush() { [[ -z $piece ]] || cmds+=("input text $(sq "$piece")"); piece=''; }
+  for ((i = 0; i < ${#text}; i++)); do
+    c=${text:i:1}
+    case $c in
+      ' ') flush; cmds+=("input keyevent 62") ;;
+      %)   piece+=%; flush ;;
+      *)   piece+=$c ;;
+    esac
+  done
+  flush
+  local IFS=';'; sh_ "${cmds[*]}"
+}
 
 ## stay-awake on|off       — keep screen on while charging (USB/AC/wireless)
 cmd_stay-awake() {
@@ -118,39 +138,39 @@ cmd_rustdesk-apk() {
   url=$(grep -o "https://[^\"]*/rustdesk-[0-9.]*-$arch\(-signed\)\?\.apk" <<<"$url" | head -1) || true
   [[ -n $url ]] || die "no RustDesk APK found for $abi"
   tmp=$(mktemp -d)
+  trap 'rm -rf "$tmp"' EXIT
   echo "==> $url"
   curl -fL --progress-bar -o "$tmp/rustdesk.apk" "$url"
-  adb install -r "$tmp/rustdesk.apk" || { rm -rf "$tmp"; exit 1; }
-  rm -rf "$tmp"
+  adb install -r "$tmp/rustdesk.apk"
   echo "Next: docs/RUSTDESK-ANDROID.md (server config + permissions, on the phone)"
 }
 
-## rustdesk-perms          — optional adb shortcut: exempt RustDesk from battery optimization
-##                           and enable its accessibility (input) service. See docs/RUSTDESK-ANDROID.md.
+## rustdesk-perms          — optional: exempt RustDesk from battery optimization, and report whether
+##                           its Input Control is on. Input itself is switched on by hand on the phone.
 cmd_rustdesk-perms() {
   local svc="$RUSTDESK_PKG/$RUSTDESK_PKG.InputService" cur
-  sh_ pm path "$RUSTDESK_PKG" >/dev/null || die "RustDesk ($RUSTDESK_PKG) is not installed"
+  [[ -n $(sh_ pm path "$RUSTDESK_PKG" || true) ]] || die "RustDesk ($RUSTDESK_PKG) is not installed"
   sh_ dumpsys deviceidle whitelist "+$RUSTDESK_PKG"
-  # Append to (don't replace) any accessibility services already enabled.
-  cur=$(sh_ settings get secure enabled_accessibility_services)
+  # Read-only: accessibility gives an app control of the phone, so the owner grants it on the
+  # phone itself (Android's own consent screen). Never write enabled_accessibility_services here.
+  cur=$(sh_ settings get secure enabled_accessibility_services || true)
   if [[ $cur == *"$svc"* ]]; then
-    echo "accessibility service already enabled"
+    echo "Input Control: on"
   else
-    [[ -z $cur || $cur == null ]] && cur=$svc || cur="$cur:$svc"
-    sh_ settings put secure enabled_accessibility_services "$cur"
-    sh_ settings put secure accessibility_enabled 1
-    echo "enabled $svc"
+    echo "Input Control: off. On the phone: RustDesk → Share screen → Input Control → RustDesk Input → On"
+    echo "(Android 13+ 'Restricted setting'? Settings → Apps → RustDesk → ⋮ → Allow restricted settings)"
   fi
 }
 
 ## photos [DEST] [DIR...]  — copy NEW photos/videos to DEST (default ./photos); never deletes or overwrites
 cmd_photos() {
   local dest=${1:-photos}; shift || true
-  local dirs=("$@") list=() f rel target copied=0 had=0
+  local dirs=("$@") list=() f rel target copied=0 had=0 failed=0 d qdirs=''
   (( ${#dirs[@]} )) || dirs=(/sdcard/DCIM /sdcard/Pictures /sdcard/Movies)
+  for d in "${dirs[@]}"; do qdirs+=" $(sq "$d")"; done
   # Skip hidden entries: .thumbnails/, and Android 11+ trash and in-progress files
   # (.trashed-<time>-IMG_….jpg, .pending-…), which would otherwise come back as "new" photos.
-  mapfile -t list < <(sh_ "find ${dirs[*]} -type f ! -path '*/.*' 2>/dev/null" || true)
+  mapfile -t list < <(sh_ "find$qdirs -type f ! -path '*/.*' 2>/dev/null" || true)
   (( ${#list[@]} )) || die "no files under: ${dirs[*]}"
   mkdir -p "$dest"
   for f in "${list[@]}"; do
@@ -161,10 +181,16 @@ cmd_photos() {
     # -a keeps the capture time as the file's mtime, so photo apps sort correctly.
     # Pull to .part first: an interrupted run never leaves a truncated file that looks complete.
     # </dev/null: adb must not eat the loop's stdin.
-    adb pull -a "$f" "$target.part" </dev/null >/dev/null && mv "$target.part" "$target"
-    echo "$rel"; copied=$((copied + 1))
+    if adb pull -a "$f" "$target.part" </dev/null >/dev/null && mv "$target.part" "$target"; then
+      echo "$rel"; copied=$((copied + 1))
+    else
+      rm -f "$target.part"; echo "FAILED  $rel" >&2; failed=$((failed + 1))
+    fi
   done
   echo "copied $copied new, $had already in $dest"
+  if (( failed )); then
+    die "$failed file(s) FAILED (phone unplugged or locked? disk full?); re-run to retry only those"
+  fi
 }
 
 ## doctor                  — check adb/scrcpy, the Ubuntu adb package conflict, devices and authorization
@@ -178,7 +204,8 @@ cmd_doctor() {
   if dpkg -s adb >/dev/null 2>&1 && [[ $(command -v adb) != /usr/bin/adb ]]; then
     echo "warn  Ubuntu's 'adb' package is installed too; remove it: sudo apt remove adb"
   fi
-  [[ -e /etc/udev/rules.d/51-android.rules || -e /usr/lib/udev/rules.d/51-android.rules ]] \
+  [[ -e /etc/udev/rules.d/51-android.rules || -e /usr/lib/udev/rules.d/51-android.rules \
+     || -e /lib/udev/rules.d/51-android.rules ]] \
     && echo "ok    udev rules for USB access" || echo "--    no 51-android udev rules (only matters if USB devices show as 'no permissions')"
   command -v adb >/dev/null || { (( ok )); return; }
   local n=0

@@ -27,7 +27,7 @@ make ios-photos DEST=~/Pictures/iphone
 make ios-backup DIR=/media/backup               # checks free space before a first backup
 ```
 
-Every target in [android/Makefile](android/Makefile) and [ios/Makefile](ios/Makefile) works from the root with an `android-` or `ios-` prefix. Their variables pass through too, e.g. `make android-mirror SERIAL=…` or `make ios-info UDID=…`. You can also `cd android` or `cd ios` and run `make help`.
+Every target in [android/Makefile](android/Makefile) and [ios/Makefile](ios/Makefile) works from the root with an `android-` or `ios-` prefix. Their variables pass through too, e.g. `make android-mirror SERIAL=…` or `make ios-info UDID=…`. Relative paths such as `DEST=photos` or `APK=app.apk` are relative to the folder you ran `make` in, not to `android/` or `ios/`. Variables are only taken from the `make` command line, so a `PORT` or `NAME` exported in your shell doesn't change a target. You can also `cd android` or `cd ios` and run `make help`.
 
 ## RustDesk server: rat.jami.uz
 

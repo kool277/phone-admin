@@ -89,7 +89,7 @@ Don't expose adb (port 5555 or the wireless debugging port) to the internet: any
 | Physical-keyboard behaviour (layouts, IME, games) | `-K` (UHID keyboard), `-M` (UHID mouse) |
 | No audio / mic instead of phone audio | `--no-audio` / `--audio-source=mic` |
 | Second "desktop" on the phone | `--new-display=1920x1080` (+ `--start-app=org.mozilla.firefox`) |
-| Record to a file | `--record=file.mp4` (add `--no-playback` for no window) |
+| Record to a file | `--record=file.mp4` (add `--no-window` for no window; `--no-playback` alone still opens one) |
 | Read-only view | `-n` / `--no-control` |
 | Lock phone when you close scrcpy | `--power-off-on-close` |
 | Webcam use (v4l2loopback) | `--v4l2-sink=/dev/video2 --no-playback` |

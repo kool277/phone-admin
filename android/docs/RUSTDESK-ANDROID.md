@@ -79,15 +79,15 @@ Phone makers' battery killers also turn the service off. Check these:
 - **Xiaomi/HyperOS:** *App info → Autostart* **on**, *Battery saver* → **No restrictions**.
 - **Huawei/Honor:** *App launch* → manage RustDesk manually and allow all three toggles.
 
-### Optional: do the battery exemption and input toggle over adb
+### Optional: do the battery exemption over adb
 
-You can do the Ignore Battery Optimizations and Input Control steps from Ubuntu instead. The phone needs USB debugging on (it's yours, and you turned it on):
+You can do the Ignore Battery Optimizations step from Ubuntu instead. The phone needs USB debugging on:
 
 ```bash
 make rustdesk-perms
 ```
 
-This runs `dumpsys deviceidle whitelist +com.carriez.flutter_hbb`. It also adds `com.carriez.flutter_hbb/com.carriez.flutter_hbb.InputService` to `enabled_accessibility_services`, keeping any services already listed there. It skips the Android 13+ "restricted setting" dialog. It **cannot** grant screen capture; that has to be tapped on the phone.
+This runs `dumpsys deviceidle whitelist +com.carriez.flutter_hbb` and then tells you whether **Input Control** is on. It does not turn Input Control on. Accessibility access lets an app control the whole phone, so you grant it on the phone itself, through Android's own screen (step 3 above). Screen capture also has to be tapped on the phone.
 
 ### Hard limit: screen capture needs a tap after every restart
 
@@ -126,5 +126,5 @@ RustDesk's built-in end-to-end encryption protects each session. This setup adds
 | Stuck on "Connecting…" / "Not ready" | 21116/UDP+TCP or 21117/TCP blocked; wrong host; `dig +short rat.jami.uz` empty or stale (DDNS not updated) |
 | Worked yesterday, "Not ready" today | Server IP changed: check DDNS, and that no device has the IP typed in instead of `rat.jami.uz` |
 | Connected but black screen | Screen capture not started on the phone (see the hard limit above) |
-| You can see but not control | **RustDesk Input** accessibility was switched off. OEM battery killers and some updates do this; re-enable it or run `make rustdesk-perms` |
+| You can see but not control | **RustDesk Input** accessibility was switched off. OEM battery killers and some updates do this; turn it back on on the phone (step 3). `make rustdesk-perms` shows whether it's on |
 | Works on Wi-Fi, fails on mobile data | Carrier NAT blocks hole punching; it should fall back to the relay (21117), so check that hbbr is running |

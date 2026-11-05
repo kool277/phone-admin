@@ -6,7 +6,7 @@
 #   redroid.sh down          stop the container (apps + data are kept)
 #   redroid.sh status        container and adb state
 #   redroid.sh logs          container log
-#   redroid.sh wipe          stop and delete the data dir (factory reset)
+#   redroid.sh wipe [--yes]  stop and delete the data dir (factory reset; asks first)
 #
 # Host needs the binder driver (root, once) — see docs/REDROID.md.
 # Env: REDROID_IMAGE (redroid/redroid:14.0.0-latest)  REDROID_PORT (5600, 127.0.0.1 only)
@@ -78,9 +78,17 @@ cmd_status() {
 cmd_logs() { docker logs "$NAME"; }
 
 cmd_wipe() {
+  [[ -d $DATA ]] || { echo "nothing to wipe: $DATA does not exist"; return 0; }
+  if [[ ${1:-} != --yes ]]; then
+    [[ -t 0 ]] || die "wipe deletes every app and file in the VM; run it in a terminal or add --yes"
+    local r; read -r -p "Delete all apps and data of the redroid VM in $DATA? [y/N] " r
+    [[ $r == [yY]* ]] || die "aborted"
+  fi
   cmd_down
   # Files under /data are created by the container's root, so delete them from a container too.
-  [[ -d $DATA ]] && docker run --rm -v "$DATA:/d" alpine sh -c 'rm -rf /d/* /d/.[!.]*' && rmdir "$DATA"
+  docker run --rm -v "$DATA:/d" alpine sh -c 'rm -rf /d/* /d/.[!.]* /d/..?*' \
+    || die "could not delete the files in $DATA (docker access? alpine image pullable?)"
+  rmdir "$DATA" || die "$DATA is not empty after the wipe"
   echo "wiped $DATA"
 }
 

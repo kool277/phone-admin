@@ -9,6 +9,8 @@
 # Then on the iPhone: Control Center → Screen Mirroring → pick the name. Same Wi-Fi/LAN as this PC.
 set -euo pipefail
 
+case ${1:-} in -h|--help) sed -n '2,/^set -euo/{/^#/s/^# \{0,1\}//p}' "$0"; echo "uxplay's own flags: uxplay -h"; exit 0 ;; esac
+
 NAME=${NAME:-phone-admin}
 
 die() { echo "error: $*" >&2; exit 1; }

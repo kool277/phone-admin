@@ -21,6 +21,7 @@ scripts/install.sh --dry-run                # print the apt/systemctl/ufw/pipx c
 - `ifuse` takes the mount point **first**, then options (`ifuse DIR -u UDID --documents ID`).
 - Help text for `install.sh`, `mirror.sh` and the cheatsheet is printed from the leading `#` comment block, so keep those headers user-facing.
 - `photos` mounts the media area on a temp dir with an EXIT trap that unmounts it, then `rsync -rt --ignore-existing`. Keep it non-destructive: never `--delete`, never overwrite.
+- `doctor` treats mirroring and management as separately installable halves (`install-mirror`/`install-manage`): a half that is absent is reported with `--`, a half that is partly installed or broken is `MISS` and fails.
 - `backup` calls `backup_space_check` for first and `FULL=1` backups (phone's used storage vs `df` of DIR; `FORCE=1` overrides).
 - `mirror.sh` always runs `uxplay -p` (fixed ports TCP 7000/7001/7100, UDP 6000/6001/7011). The docs and `install.sh --ufw` rely on those ports.
 

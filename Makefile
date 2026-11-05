@@ -5,6 +5,7 @@
 #
 # Variables pass through:  make android-mirror SERIAL=192.168.1.42:5555
 #                          make ios-backup UDID=00008110-000A1B2C3D4E5F6A DIR=/media/backup
+# Relative paths (DEST=photos, APK=app.apk, …) are relative to where you ran make, not android/ or ios/.
 
 SHELL := /bin/bash
 
@@ -32,8 +33,9 @@ lint: ## shellcheck all scripts
 	$(MAKE) --no-print-directory -C android lint
 	$(MAKE) --no-print-directory -C ios lint
 
+# CALLER tells the sub-make where relative paths start (make -C changes the directory and $PWD).
 android-%:
-	@$(MAKE) --no-print-directory -C android $*
+	@$(MAKE) --no-print-directory -C android $* CALLER='$(subst ','\'',$(CURDIR))'
 
 ios-%:
-	@$(MAKE) --no-print-directory -C ios $*
+	@$(MAKE) --no-print-directory -C ios $* CALLER='$(subst ','\'',$(CURDIR))'

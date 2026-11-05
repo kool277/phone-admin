@@ -47,7 +47,7 @@ make rustdesk-android   # install the right APK for the phone's CPU
 | `devices`, `info` | List devices; model, Android version, battery, storage |
 | `doctor` | Checks adb/scrcpy, a conflicting Ubuntu `adb` package, udev rules, and each device's state (unauthorized/offline) |
 | `photos [DEST=…]` | Copy new photos/videos (DCIM, Pictures, Movies) to `./photos`, keeping capture times. Re-runs copy only what's new; nothing is deleted |
-| `rustdesk-android`, `rustdesk-perms` | Install RustDesk; optional battery and input permissions via adb |
+| `rustdesk-android`, `rustdesk-perms` | Install RustDesk; optional battery exemption via adb (also shows whether Input Control is on; you switch that on on the phone) |
 | `vm-up`, `vm-mirror`, `vm-down`, `vm-status` | Virtual Android in Docker (redroid) mirrored with scrcpy; no phone or KVM needed |
 
 Common variables: `SERIAL=<serial|ip:port>` picks a device; `OPTS="…"` passes extra scrcpy flags. `make help` lists all targets.
