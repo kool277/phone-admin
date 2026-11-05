@@ -31,7 +31,7 @@ What to know:
 
 | make / cheatsheet | Tool | What it does |
 |---|---|---|
-| `make doctor` | | Checks tools, Avahi, usbmuxd, pairing, iOS version and Developer Mode |
+| `make doctor` | | Checks tools, Avahi, usbmuxd, pairing, iOS version and Developer Mode; with `UDID=…`, that this iPhone is attached |
 | `make devices` | `idevice_id -l` | UDIDs and names on USB |
 | `make info` | `ideviceinfo` | Name, model, iOS version, battery, storage, Developer Mode |
 | `info-all [DOMAIN]` | `ideviceinfo [-q DOMAIN]` | Every lockdown value, e.g. `com.apple.mobile.battery` |
@@ -56,7 +56,7 @@ What to know:
 ## Backups
 
 - Backups use the same format as Finder/iTunes and land in `DIR/<UDID>/`. The size is roughly the phone's used storage, minus what lives only in iCloud.
-- **Free space check:** a first backup (or `make backup-full`) needs room for all of that, and running out halfway wastes a long wait. `make backup` compares the phone's used storage with the free space in `DIR` first and refuses if it won't fit. The phone's usage is an upper bound, so `FORCE=1` tries anyway. Later backups are incremental and skip the check. External disk: `make backup DIR=/media/$USER/<disk>/iphone`.
+- **Free space check:** a first backup (or `make backup-full`) needs room for all of that, and running out halfway wastes a long wait. `make backup` compares the phone's used storage with the free space in `DIR` first and refuses if it won't fit. The phone's usage is an upper bound, so `FORCE=1` tries anyway. Later backups are incremental and skip the check. External disk: `make backup DIR="/media/$USER/<disk>/iphone"` (quote it if the disk name has spaces).
 - **Encryption:** encrypted backups also keep saved passwords, Wi-Fi, Health and call history. On iOS 13 and later, turning encryption on or off asks for the passcode on the phone. When encryption is on, starting a backup may ask for it as well. The password is stored on the iPhone, and if you lose it, the backups can't be read. Removing it without the password means resetting all settings on the phone.
 - **Restore** replaces the phone's data and reboots it. iOS refuses while **Find My iPhone** is on.
 
@@ -84,7 +84,7 @@ The screenshot service is a **developer service**. Developer Mode has to be on (
 With pymobiledevice3 (every iOS version):
 
 ```bash
-make install-pmd3    # pipx install pymobiledevice3 (user-level)
+make install-pmd3    # pipx install pymobiledevice3 (user-level); re-run later to upgrade it
 make dev-mode        # iOS 16+: makes the switch visible. Then, ON THE PHONE:
                      #   Settings → Privacy & Security → Developer Mode → On → Restart → confirm with passcode
 make mount-ddi       # pymobiledevice3 mounter auto-mount: downloads the right image (internet needed;
@@ -94,7 +94,7 @@ make screenshot      # pymobiledevice3 developer dvt screenshot → PNG
 
 - **Tunnel, iOS 17.4 and later:** pymobiledevice3 (11.x) opens its own tunnel without root, automatically.
 - **Tunnel, iOS 17.0–17.3:** start `sudo pymobiledevice3 remote tunneld` in another terminal and export `PYMOBILEDEVICE3_TUNNEL=<udid>`.
-- **iOS 27:** pymobiledevice3 11.x's source notes that the developer image becomes a *cryptex* from iOS 27 on. After every major iOS update, run `pipx upgrade pymobiledevice3` before anything else.
+- **iOS 27:** pymobiledevice3 11.x's source notes that the developer image becomes a *cryptex* from iOS 27 on. After every major iOS update, run `make install-pmd3` (it upgrades an existing install) before anything else.
 - **Turning it off:** Developer Mode loosens a few protections, so switch it off again when you're done (same settings screen).
 - **Without Developer Mode:** mirror the screen (`make mirror`) and take a screenshot of the uxplay window with the desktop's own screenshot tool. This works on any iOS version.
 

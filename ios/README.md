@@ -33,8 +33,8 @@ make screenshot    # needs Developer Mode; on iOS 17+ also `make install-pmd3` (
 | Target | What it does |
 |---|---|
 | `install`, `install-mirror`, `install-manage` | Install everything, or just one half |
-| `install-pmd3` | Optional pymobiledevice3 (pipx), needed for screenshots on iOS 17+ |
-| `doctor` | Checks tools, Avahi, usbmuxd, pairing, iOS version and Developer Mode |
+| `install-pmd3` | Optional pymobiledevice3 (pipx), needed for screenshots on iOS 17+. Re-run it to upgrade |
+| `doctor` | Checks tools, Avahi, usbmuxd, pairing, iOS version and Developer Mode. A half you didn't install (mirroring or management) is listed, not counted as an error |
 | `mirror`, `mirror-fs` | Start the AirPlay receiver (`NAME=…`, `OPTS="…"` for uxplay flags) |
 | `devices`, `pair`, `unpair` | List iPhones; pair or unpair this PC |
 | `info`, `apps`, `install-ipa IPA=…` | Device info; installed apps; install a signed `.ipa` |
@@ -45,7 +45,7 @@ make screenshot    # needs Developer Mode; on iOS 17+ also `make install-pmd3` (
 | `syslog` | Live device log (`MATCH=…`) |
 | `lint` | shellcheck the scripts |
 
-Several iPhones attached: add `UDID=<udid>` (from `make devices`). `make help` lists all targets. `scripts/manage-cheatsheet.sh help` lists more commands: app Documents folders, crash logs, encryption, restore, rename, restart.
+Several iPhones attached: add `UDID=<udid>` (from `make devices`). Paths (`DIR=`, `DEST=`, `FILE=`, `IPA=`) are relative to the folder you run `make` in, and may contain spaces. Only values on the `make` command line count, so a `NAME` exported in your shell doesn't rename the receiver. `make help` lists all targets. `scripts/manage-cheatsheet.sh help` lists more commands: app Documents folders, crash logs, encryption, restore, rename, restart.
 
 ## iOS-version notes (details in the docs)
 

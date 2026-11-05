@@ -32,7 +32,7 @@ Settings, all optional environment variables for `scripts/redroid.sh`:
 | `REDROID_IMAGE` | `redroid/redroid:14.0.0-latest` | Other tags: `15.0.0-latest`, `16.0.0-latest`, `*_64only-latest` |
 | `REDROID_SIZE` / `REDROID_DPI` | `720x1280` / `320` | Larger sizes cost CPU, since rendering is in software |
 | `REDROID_PORT` | `5600` | Bound to **127.0.0.1 only**, so adb isn't exposed to the network |
-| `REDROID_DATA` | `~/.local/share/redroid/<tag>` | `/data` of the device; `scripts/redroid.sh wipe` resets it |
+| `REDROID_DATA` | `~/.local/share/redroid/<tag>` | `/data` of the device; `scripts/redroid.sh wipe` resets it (asks first; `--yes` skips the question, e.g. in scripts) |
 
 ## Limits
 

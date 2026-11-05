@@ -21,7 +21,7 @@ make mirror               # starts uxplay as "phone-admin"; Ctrl+C stops it
 make mirror NAME="Office PC" OPTS="-fs"
 ```
 
-`scripts/mirror.sh` checks that uxplay and Avahi are ready, then runs `uxplay -n "$NAME" -nh -p` with your extra options.
+`scripts/mirror.sh` checks that uxplay and Avahi are ready, then runs `uxplay -n "$NAME" -nh -p` with your extra options (`scripts/mirror.sh --help` for its own help, `uxplay -h` for uxplay's flags).
 
 ## Mirror from the iPhone
 

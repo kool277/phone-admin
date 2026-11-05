@@ -46,13 +46,13 @@ make rustdesk-android   # install the right APK for the phone's CPU
 | `install-apk APK=…` | Install or update an APK and keep its data |
 | `devices`, `info` | List devices; model, Android version, battery, storage |
 | `doctor` | Checks adb/scrcpy, a conflicting Ubuntu `adb` package, udev rules, and each device's state (unauthorized/offline) |
-| `photos [DEST=…]` | Copy new photos/videos (DCIM, Pictures, Movies) to `./photos`, keeping capture times. Re-runs copy only what's new; nothing is deleted |
+| `photos [DEST=…]` | Copy new photos/videos (DCIM, Pictures, Movies) to `./photos`, keeping capture times. Re-runs copy only what's new; nothing is deleted. Files that fail to copy are listed and picked up by the next run |
 | `rustdesk-android`, `rustdesk-perms` | Install RustDesk; optional battery exemption via adb (also shows whether Input Control is on; you switch that on on the phone) |
 | `vm-up`, `vm-mirror`, `vm-down`, `vm-status` | Virtual Android in Docker (redroid) mirrored with scrcpy; no phone or KVM needed |
 
-Common variables: `SERIAL=<serial|ip:port>` picks a device; `OPTS="…"` passes extra scrcpy flags. `make help` lists all targets.
+Common variables: `SERIAL=<serial|ip:port>` picks a device; `OPTS="…"` passes extra scrcpy flags. Paths (`APK=`, `DEST=`, `FILE=`) are relative to the folder you run `make` in, and may contain spaces. Only values on the `make` command line count; variables exported in your shell are ignored. `make help` lists all targets.
 
-More adb commands, such as packages, debloat/restore, pulling APKs, push/pull files, logcat, screenshots and reboot:
+More adb commands, such as packages, debloat/restore, pulling APKs, push/pull files, logcat, screenshots, typing text and reboot:
 
 ```bash
 scripts/adb-cheatsheet.sh help

@@ -23,6 +23,7 @@ make install        # official static release → /opt/scrcpy, plus adb, plus ud
 - `make install-apt` installs Ubuntu's packages instead. On 24.04 that means scrcpy 1.25, which has no audio, no virtual display and no UHID keyboard. It's only worth using on non-x86_64 machines.
 - To use hardware video decoding (on by default since scrcpy 5.0), run `sudo apt install va-driver-all`. scrcpy falls back to software decoding when it's missing.
 - After the first install, **log out and back in** so that the `plugdev` group (for USB access) takes effect.
+- Re-run `make install` to update to the latest release. Settings, as environment variables for `scripts/install.sh`: `SCRCPY_VERSION=v5.0.1` pins a version, `SCRCPY_PREFIX` (default `/opt/scrcpy`) and `SCRCPY_BINDIR` (default `/usr/local/bin`) change where it goes. The installer replaces `SCRCPY_PREFIX` on every run, so it refuses a folder that already holds anything other than scrcpy. The installer ignores a plain `PREFIX` exported for other builds.
 
 ## 2. Prepare the phone (once, by hand)
 
@@ -54,6 +55,7 @@ The phone and the PC must be on the same LAN.
    ```bash
    make pair ADDR=192.168.1.42:37123 CODE=482915     # once per PC
    ```
+   It prints `Paired.` only when adb confirms the pairing; a wrong or expired code stops with `pairing failed`. The code and port change every time the pairing dialog opens.
 3. Back on the main *Wireless debugging* screen, use the **IP address & Port** shown there. That's a *different* port from the pairing one.
    ```bash
    make connect ADDR=192.168.1.42:41245
@@ -69,6 +71,7 @@ This mode has some quirks. The connect port changes every time Wireless debuggin
 make wireless                   # phone on USB: finds its Wi-Fi IP, runs adb tcpip 5555, connects
 make mirror-wifi
 ```
+Unplug only after `make wireless` says *You can unplug USB now*. If the Wi-Fi connection fails, it stops with `could not connect … KEEP THE CABLE IN`, and the phone stays reachable over USB.
 Or let scrcpy do it all in one step:
 ```bash
 make mirror-tcpip               # = scrcpy --tcpip   (phone on USB)
@@ -126,4 +129,7 @@ For the full list, run `man -l /opt/scrcpy/scrcpy.1` or `scrcpy --help`.
 | Some apps show black | Normal: banking/DRM apps block capture (`FLAG_SECURE`) |
 | `ERROR: Could not create VA-API device` | No usable GPU decoder (e.g. Ubuntu in a VM). Harmless: scrcpy falls back to software decoding. Add `--hwdec=disabled` to silence it |
 | Laggy over Wi-Fi | `-m 1024 -b 2M --max-fps=30`, use 5 GHz Wi-Fi, or USB |
+| `pairing failed` after `make pair` | Wrong or expired code: open *Pair device with pairing code* again and use the new code **and** port |
+| `could not connect … over Wi-Fi` after `make wireless` | Guest or client-isolated Wi-Fi, or a firewall blocking the port. Keep the cable in; try another network or `make mirror-usb` |
+| `… is not a scrcpy install; refusing to replace it` | `SCRCPY_PREFIX` points at a folder with other files. Use a new or empty folder (or the default) |
 | Need to list devices | `make devices` |
